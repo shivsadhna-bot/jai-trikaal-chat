@@ -4,9 +4,8 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         const userPrompt = body.prompt || "नमस्ते";
 
-        // आपके स्क्रीनशॉट के अनुसार लेटेस्ट मॉडल: gemini-2.5-pro-preview-tts
-        // Preview मॉडल्स के लिए v1beta सबसे सही रहता है
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-tts:generateContent?key=${apiKey}`, {
+        // Free Tier के लिए सबसे भरोसेमंद मॉडल 'gemini-1.5-flash' है
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
