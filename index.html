@@ -132,31 +132,38 @@
         }
 
         function speak(text) {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'hi-IN';
-            msg.rate = 0.9;
-            msg.onstart = () => { 
-                isAiSpeaking = true; 
-                callStatus.innerText = "ज्योतिषी बोल रहे हैं...";
-                if(recognition) recognition.stop(); 
-            };
-            msg.onend = () => { 
-                isAiSpeaking = false; 
-                callStatus.innerText = "सुन रहा हूँ...";
-                if(recognition) recognition.start(); 
-            };
-            window.speechSynthesis.speak(msg);
-        }
+    window.speechSynthesis.cancel(); // पुरानी कोई भी गूँज साफ़ करें
+    const msg = new SpeechSynthesisUtterance(text);
+    
+    // ब्राउज़र में उपलब्ध सभी आवाज़ों की लिस्ट लें
+    const voices = window.speechSynthesis.getVoices();
+    
+    // सबसे अच्छी हिंदी आवाज़ (Google Hindi या Microsoft Hemant) को ढूँढें
+    const selectedVoice = voices.find(voice => 
+        voice.lang.includes('hi-IN') && voice.name.includes('Google')
+    ) || voices.find(voice => voice.lang.includes('hi-IN'));
 
-        startCallBtn.onclick = () => {
-            callOverlay.classList.remove('hidden');
-            speak("सप्रेम नमस्ते, जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। अपनी समस्या बताएं।");
-        };
+    if (selectedVoice) {
+        msg.voice = selectedVoice; // HD आवाज़ सेट करें
+    }
 
-        endCallBtn.onclick = () => {
-            window.speechSynthesis.cancel();
-            if(recognition) recognition.stop();
-            callOverlay.classList.add('hidden');
+    msg.lang = 'hi-IN';
+    msg.rate = 0.85;  // थोड़ा और धीरे ताकि शब्द साफ़ सुनाई दें [cite: 58, 79]
+    msg.pitch = 1.1; // आवाज़ को थोड़ा नेचुरल बनाने के लिए पिच एडजस्ट करें [cite: 58]
+
+    msg.onstart = () => { 
+        isAiSpeaking = true; 
+        callStatus.innerText = "ज्योतिषी बोल रहे हैं..."; [cite: 55, 76]
+        if(recognition) recognition.stop(); [cite: 60, 71]
+    };
+
+    msg.onend = () => { 
+        isAiSpeaking = false; 
+        callStatus.innerText = "सुन रहा हूँ..."; [cite: 62]
+        if(recognition) recognition.start(); [cite: 62, 71]
+    };
+
+    window.speechSynthesis.speak(msg);
         };
     </script>
 </body>
