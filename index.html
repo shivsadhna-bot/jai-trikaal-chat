@@ -37,7 +37,7 @@
     </div>
 
     <script>
-        const API_KEY = ""; // <--- यहाँ अपनी Gemini API Key पेस्ट करें
+        const API_KEY = "YAHAN_APNI_API_KEY_DAALEIN"; // <--- यहाँ अपनी Gemini API Key पेस्ट करें
         let currentAgentPrompt = "तुम एक विशेषज्ञ ज्योतिषी हो।";
 
         function setAgent(type) {
@@ -46,15 +46,29 @@
             alert(type + " एजेंट सक्रिय है।");
         }
 
-        async function sendMessage() {
-            const input = document.getElementById('userInput');
-            const chatBox = document.getElementById('chatBox');
-            if(!input.value) return;
+       async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const chatBox = document.getElementById('chatBox');
+    if(!input.value) return;
 
-            // User Message
-            chatBox.innerHTML += `<div class="msg user-msg">${input.value}</div>`;
-            const userText = input.value;
-            input.value = "";
+    chatBox.innerHTML += `<div class="msg user-msg">${input.value}</div>`;
+    const userText = input.value;
+    input.value = "";
+
+    try {
+        // अब हम अपने खुद के सर्वर (Vercel Function) को कॉल कर रहे हैं
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ prompt: currentAgentPrompt + " सवाल: " + userText })
+        });
+        const data = await response.json();
+        const aiText = data.candidates[0].content.parts[0].text;
+        chatBox.innerHTML += `<div class="msg ai-msg">${aiText}</div>`;
+    } catch (e) {
+        chatBox.innerHTML += `<div class="msg ai-msg">Error: सर्वर कनेक्ट नहीं हो पाया।</div>`;
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
             // Gemini AI Call
             try {
