@@ -17,47 +17,15 @@
         input { flex: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #D4AF37; background: #111; color: #fff; outline: none; }
         button { padding: 10px 25px; border-radius: 25px; border: none; background: #D4AF37; color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #b8952d; transform: scale(1.05); }
-        .call-btn {
-    background: linear-gradient(45deg, #d4af37, #b8860b);
-    color: #000;
-    padding: 15px 30px;
-    border-radius: 50px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
-}
-
-#call-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 9999;
-}
-
-.call-card {
-    text-align: center;
-    color: #d4af37;
-}
-
-.avatar-glow {
-    width: 150px; height: 150px;
-    margin: 0 auto 20px;
-    border-radius: 50%;
-    border: 3px solid #d4af37;
-    box-shadow: 0 0 30px #d4af37;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 20px #d4af37; }
-    50% { transform: scale(1.05); box-shadow: 0 0 40px #d4af37; }
-    100% { transform: scale(1); box-shadow: 0 0 20px #d4af37; }
-}
-
-.hidden { display: none !important; }
+        
+        /* Calling Styles */
+        .call-btn { background: linear-gradient(45deg, #d4af37, #b8860b); color: #000; padding: 15px 30px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); margin-top: 20px; }
+        #call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .call-card { text-align: center; color: #d4af37; }
+        .avatar-glow { width: 150px; height: 150px; margin: 0 auto 20px; border-radius: 50%; border: 3px solid #d4af37; box-shadow: 0 0 30px #d4af37; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 20px #d4af37; } 50% { transform: scale(1.05); box-shadow: 0 0 40px #d4af37; } 100% { transform: scale(1); box-shadow: 0 0 20px #d4af37; } }
+        .hidden { display: none !important; }
+        .end-btn { background: #ff4444; color: white; border: none; padding: 12px 25px; border-radius: 25px; margin-top: 25px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -70,7 +38,7 @@
     </div>
 
     <div class="chat-box" id="chatBox">
-        <div class="msg ai-msg">नमस्ते! मैं जय त्रिकाल से आपकी कैसे सहायता कर सकता हूँ? कृपया ऊपर से कोई एक्सपर्ट चुनें और अपना सवाल पूछें।</div>
+        <div class="msg ai-msg">नमस्ते! मैं जय त्रिकाल से आपकी कैसे सहायता कर सकता हूँ? कृपया ऊपर से कोई एक्सपर्ट चुनें।</div>
     </div>
 
     <div class="input-area">
@@ -78,9 +46,22 @@
         <button type="button" onclick="sendMessage()">पूछें</button>
     </div>
 
-    <script>
-        let currentAgentPrompt = "तुम एक विशेषज्ञ ज्योतिषी हो। हिंदी में बात करो।";
+    <button id="start-call-btn" class="call-btn">📞 ज्योतिषी से बात करें</button>
 
+    <div id="call-overlay" class="hidden">
+        <div class="call-card">
+            <div class="avatar-glow">
+                <img src="https://cdn-icons-png.flaticon.com/512/3884/3884851.png" alt="Jyotishi" style="width:120px; border-radius:50%;">
+            </div>
+            <h2 id="call-status">कनेक्ट हो रहा है...</h2>
+            <p id="live-transcript" style="color: white; font-style: italic;">सुन रहा हूँ...</p>
+            <button id="end-call-btn" class="end-btn">✖ कॉल काटें</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Chat Logic ---
+        let currentAgentPrompt = "तुम एक विशेषज्ञ ज्योतिषी हो। हिंदी में बात करो।";
         function setAgent(type) {
             if(type === 'Love') currentAgentPrompt = "तुम प्रेम संबंधों के विशेषज्ञ ज्योतिषी हो।";
             else if(type === 'Career') currentAgentPrompt = "तुम करियर और धन के विशेषज्ञ ज्योतिषी हो।";
@@ -92,207 +73,91 @@
             const input = document.getElementById('userInput');
             const chatBox = document.getElementById('chatBox');
             const userText = input.value.trim();
-            
             if(!userText) return;
 
-            // 1. User का मैसेज स्क्रीन पर दिखाओ
             chatBox.innerHTML += `<div class="msg user-msg">${userText}</div>`;
             input.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 2. "टाइपिंग..." दिखाओ
             const loadingId = "loading-" + Date.now();
             chatBox.innerHTML += `<div class="msg ai-msg" id="${loadingId}">सोच रहा हूँ...</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-           try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }, // यह लाइन बहुत जरूरी है
-                    body: JSON.stringify({ prompt: currentAgentPrompt + " यूजर का सवाल: " + userText })
-                });
-
-                const data = await response.json();
-                const loadingElement = document.getElementById(loadingId);
-                
-                // अगर डेटा में कैंडिडेट्स हैं तो जवाब दिखाओ
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
-                    loadingElement.innerText = data.candidates[0].content.parts[0].text;
-                } 
-                // अगर कोई एरर मैसेज आया है तो वो दिखाओ
-                else if (data.error) {
-                    loadingElement.innerText = "Error: " + (data.error.message || data.error);
-                }
-                else {
-                    loadingElement.innerText = "माफी चाहता हूँ, अभी तकनीकी समस्या है।";
-                }
-            } catch (e) {
-                document.getElementById(loadingId).innerText = "Server Error: संपर्क नहीं हो पाया।";
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    </script>
-    <script>
-    const startCallBtn = document.getElementById('start-call-btn');
-    const endCallBtn = document.getElementById('end-call-btn');
-    const callOverlay = document.getElementById('call-overlay');
-    const callStatus = document.getElementById('call-status');
-    const transcriptArea = document.getElementById('live-transcript');
-
-    // 1. वॉइस इंजन सेटअप
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN';
-    recognition.continuous = true;
-    recognition.interimResults = false;
-
-    let isAiSpeaking = false; // यह चेक करेगा कि AI बोल रहा है या नहीं
-
-    startCallBtn.onclick = () => {
-        callOverlay.classList.remove('hidden');
-        speak("जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। आज आपकी कुंडली क्या कहती है? पूछिए।");
-    };
-
-    // 2. जब आप बोलें
-    recognition.onresult = async (event) => {
-        if (isAiSpeaking) return; // अगर AI बोल रहा है, तो इनपुट न लें
-
-        const userText = event.results[event.results.length - 1][0].transcript;
-        transcriptArea.innerText = "आप: " + userText;
-        callStatus.innerText = "ज्योतिषी विचार कर रहे हैं...";
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: userText })
-            });
-            const data = await response.json();
-            const aiText = data.candidates[0].content.parts[0].text;
             
-            callStatus.innerText = "ज्योतिषी बोल रहे हैं...";
-            speak(aiText);
-        } catch (err) {
-            speak("माफ़ करें, नेटवर्क की समस्या है।");
-        }
-    };
-
-    // 3. AI की साफ़ आवाज़ और माइक कंट्रोल
-    function speak(text) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'hi-IN';
-        msg.rate = 0.9;  // बोलने की रफ़्तार (थोड़ा धीरे)
-        msg.pitch = 0.8; // आवाज़ की गहराई (गंभीर आवाज़)
-
-        msg.onstart = () => {
-            isAiSpeaking = true;
-            recognition.stop(); // AI के बोलते समय माइक बंद
-        };
-
-        msg.onend = () => {
-            isAiSpeaking = false;
-            callStatus.innerText = "सुन रहा हूँ...";
-            recognition.start(); // AI के चुप होते ही माइक चालू
-        };
-
-        window.speechSynthesis.speak(msg);
-    }
-
-    endCallBtn.onclick = () => {
-        window.speechSynthesis.cancel();
-        recognition.stop();
-        callOverlay.classList.add('hidden');
-    };
-</script>
-            
-        </div>
-    </div>
-</div>
-    <div id="call-action-area" style="text-align: center; margin-top: 20px;">
-    <button id="start-call-btn" class="call-btn">📞 ज्योतिषी से बात करें</button>
-</div>
-
-<div id="call-overlay" class="hidden">
-    <div class="call-card" style="text-align: center; color: #d4af37; padding: 50px;">
-        <div class="avatar-glow">
-            <img src="https://cdn-icons-png.flaticon.com/512/3884/3884851.png" alt="Jyotishi" style="width:120px; border-radius:50%;">
-        </div>
-        <h2 id="call-status">कनेक्ट हो रहा है...</h2>
-        <p id="live-transcript" style="color: white;">सुन रहा हूँ...</p>
-        <button id="end-call-btn" class="end-btn" style="background: red; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-top: 20px; cursor: pointer;">✖ कॉल काटें</button>
-    </div>
-</div>
-
-<script>
-    // Elements को पहचानना
-    const startCallBtn = document.getElementById('start-call-btn');
-    const endCallBtn = document.getElementById('end-call-btn');
-    const callOverlay = document.getElementById('call-overlay');
-    const callStatus = document.getElementById('call-status');
-    const transcriptArea = document.getElementById('live-transcript');
-
-    // आवाज़ इंजन सेटअप
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-        alert("आपका ब्राउज़र वॉइस कॉलिंग सपोर्ट नहीं करता। कृपया Chrome इस्तेमाल करें।");
-    } else {
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'hi-IN';
-        recognition.continuous = true;
-
-        // बटन दबाने पर क्या हो
-        startCallBtn.addEventListener('click', () => {
-            console.log("Call Started"); // चेक करने के लिए
-            callOverlay.classList.remove('hidden');
-            callStatus.innerText = "नमस्ते! मैं सुन रहा हूँ...";
-            
-            // शुरुआत में AI का स्वागत
-            speak("सप्रेम नमस्ते, जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। अपनी जन्म तिथि बताएं या अपना प्रश्न पूछें।");
-            
-            // बोलना शुरू करने के लिए थोड़ा इंतज़ार ताकि स्वागत संदेश खत्म हो
-            setTimeout(() => { recognition.start(); }, 2000);
-        });
-
-        // कॉल काटना
-        endCallBtn.addEventListener('click', () => {
-            recognition.stop();
-            window.speechSynthesis.cancel();
-            callOverlay.classList.add('hidden');
-        });
-
-        // जब आप बोलें तो क्या हो
-        recognition.onresult = async (event) => {
-            const userText = event.results[event.results.length - 1][0].transcript;
-            transcriptArea.innerText = "आप: " + userText;
-            
-            callStatus.innerText = "ज्योतिषी विचार कर रहे हैं...";
-
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: userText })
+                    body: JSON.stringify({ prompt: currentAgentPrompt + " यूजर का सवाल: " + userText })
                 });
                 const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-                
-                callStatus.innerText = "ज्योतिषी बोल रहे हैं...";
-                speak(aiText);
-            } catch (err) {
-                console.error("API Error:", err);
-                speak("माफ़ करें, नेटवर्क में कुछ बाधा है।");
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "तकनीकी समस्या है।";
+                document.getElementById(loadingId).innerText = reply;
+            } catch (e) {
+                document.getElementById(loadingId).innerText = "Server Error!";
             }
-        };
-    }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-    // AI की आवाज़ निकालने वाला फंक्शन
-    function speak(text) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'hi-IN';
-        msg.rate = 0.9;
-        window.speechSynthesis.speak(msg);
-    }
-</script>
+        // --- Call Logic ---
+        const startCallBtn = document.getElementById('start-call-btn');
+        const endCallBtn = document.getElementById('end-call-btn');
+        const callOverlay = document.getElementById('call-overlay');
+        const callStatus = document.getElementById('call-status');
+        const transcriptArea = document.getElementById('live-transcript');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isAiSpeaking = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN';
+            recognition.continuous = true;
+
+            recognition.onresult = async (event) => {
+                if (isAiSpeaking) return;
+                const userText = event.results[event.results.length - 1][0].transcript;
+                transcriptArea.innerText = "आप: " + userText;
+                callStatus.innerText = "ज्योतिषी विचार कर रहे हैं...";
+
+                try {
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: userText })
+                    });
+                    const data = await response.json();
+                    speak(data.candidates[0].content.parts[0].text);
+                } catch (err) { speak("नेटवर्क में समस्या है।"); }
+            };
+        }
+
+        function speak(text) {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'hi-IN';
+            msg.rate = 0.9;
+            msg.onstart = () => { 
+                isAiSpeaking = true; 
+                callStatus.innerText = "ज्योतिषी बोल रहे हैं...";
+                if(recognition) recognition.stop(); 
+            };
+            msg.onend = () => { 
+                isAiSpeaking = false; 
+                callStatus.innerText = "सुन रहा हूँ...";
+                if(recognition) recognition.start(); 
+            };
+            window.speechSynthesis.speak(msg);
+        }
+
+        startCallBtn.onclick = () => {
+            callOverlay.classList.remove('hidden');
+            speak("सप्रेम नमस्ते, जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। अपनी समस्या बताएं।");
+        };
+
+        endCallBtn.onclick = () => {
+            window.speechSynthesis.cancel();
+            if(recognition) recognition.stop();
+            callOverlay.classList.add('hidden');
+        };
+    </script>
 </body>
 </html>
