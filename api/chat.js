@@ -4,8 +4,8 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         const userPrompt = body.prompt || "नमस्ते";
 
-        // आपके स्क्रीनशॉट के पॉइंट 3 के अनुसार: gemini-1.5-flash
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // यहाँ हमने मॉडल का नाम 'gemini-1.5-flash-latest' कर दिया है
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
     } catch (error) {
         return res.status(200).json({ 
-            candidates: [{ content: { parts: [{ text: "Server Error: " + error.message }] } }] 
+            candidates: [{ content: { parts: [{ text: "System Error: " + error.message }] } }] 
         });
     }
 }
