@@ -132,69 +132,78 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
-    <div id="call-action-area" style="text-align: center; margin-top: 20px;">
-    <button id="start-call-btn" class="call-btn">📞 ज्योतिषी से बात करें</button>
-</div>
+    <script>
+    const startCallBtn = document.getElementById('start-call-btn');
+    const endCallBtn = document.getElementById('end-call-btn');
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const transcriptArea = document.getElementById('live-transcript');
 
-<div id="call-overlay" class="hidden">
-    <div class="call-card">
-        <div class="avatar-glow">
-            <img src="astrologer-avatar.png" alt="Jyotishi" id="jyotishi-img">
-        </div>
-        <h2 id="call-status">कनेक्ट हो रहा है...</h2>
-        <p id="live-transcript">सुन रहा हूँ...</p>
-        
-        <div class="call-controls">
-            <button id="end-call-btn" class="end-btn">✖ कॉल काटें</button>
-            const startCallBtn = document.getElementById('start-call-btn');
-const endCallBtn = document.getElementById('end-call-btn');
-const callOverlay = document.getElementById('call-overlay');
-const callStatus = document.getElementById('call-status');
+    // 1. वॉइस इंजन सेटअप
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'hi-IN';
+    recognition.continuous = true;
+    recognition.interimResults = false;
 
-// आवाज़ पहचानने का सिस्टम (Browser's Voice Engine)
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recognition.lang = 'hi-IN'; // हिंदी
-recognition.continuous = true;
+    let isAiSpeaking = false; // यह चेक करेगा कि AI बोल रहा है या नहीं
 
-// कॉल शुरू करना
-startCallBtn.onclick = () => {
-    callOverlay.classList.remove('hidden');
-    recognition.start();
-    callStatus.innerText = "नमस्ते! मैं सुन रहा हूँ...";
-    speak("जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। अपनी समस्या बताएं।");
-};
+    startCallBtn.onclick = () => {
+        callOverlay.classList.remove('hidden');
+        speak("जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। आज आपकी कुंडली क्या कहती है? पूछिए।");
+    };
 
-// जब आप बोलेंगे, तो क्या होगा
-recognition.onresult = async (event) => {
-    const text = event.results[event.results.length - 1][0].transcript;
-    document.getElementById('live-transcript').innerText = "आप: " + text;
+    // 2. जब आप बोलें
+    recognition.onresult = async (event) => {
+        if (isAiSpeaking) return; // अगर AI बोल रहा है, तो इनपुट न लें
 
-    // अब यहाँ Gemini API को कॉल करें (वही कोड जो आपने पहले चैट के लिए बनाया था)
-    const response = await fetch('/api/chat', {
-        method: 'POST',
-        body: JSON.stringify({ prompt: text })
-    });
-    const data = await response.json();
-    const reply = data.candidates[0].content.parts[0].text;
+        const userText = event.results[event.results.length - 1][0].transcript;
+        transcriptArea.innerText = "आप: " + userText;
+        callStatus.innerText = "ज्योतिषी विचार कर रहे हैं...";
 
-    speak(reply);
-};
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: userText })
+            });
+            const data = await response.json();
+            const aiText = data.candidates[0].content.parts[0].text;
+            
+            callStatus.innerText = "ज्योतिषी बोल रहे हैं...";
+            speak(aiText);
+        } catch (err) {
+            speak("माफ़ करें, नेटवर्क की समस्या है।");
+        }
+    };
 
-// AI का बोलकर जवाब देना
-function speak(text) {
-    window.speechSynthesis.cancel(); // पुरानी आवाज़ बंद करें
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'hi-IN';
-    msg.rate = 0.9; 
-    window.speechSynthesis.speak(msg);
-}
+    // 3. AI की साफ़ आवाज़ और माइक कंट्रोल
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'hi-IN';
+        msg.rate = 0.9;  // बोलने की रफ़्तार (थोड़ा धीरे)
+        msg.pitch = 0.8; // आवाज़ की गहराई (गंभीर आवाज़)
 
-// कॉल काटना
-endCallBtn.onclick = () => {
-    window.speechSynthesis.cancel();
-    recognition.stop();
-    callOverlay.classList.add('hidden');
-};
+        msg.onstart = () => {
+            isAiSpeaking = true;
+            recognition.stop(); // AI के बोलते समय माइक बंद
+        };
+
+        msg.onend = () => {
+            isAiSpeaking = false;
+            callStatus.innerText = "सुन रहा हूँ...";
+            recognition.start(); // AI के चुप होते ही माइक चालू
+        };
+
+        window.speechSynthesis.speak(msg);
+    }
+
+    endCallBtn.onclick = () => {
+        window.speechSynthesis.cancel();
+        recognition.stop();
+        callOverlay.classList.add('hidden');
+    };
+</script>
             </script>
         </div>
     </div>
