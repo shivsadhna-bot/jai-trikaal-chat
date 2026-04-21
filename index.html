@@ -199,5 +199,91 @@ endCallBtn.onclick = () => {
         </div>
     </div>
 </div>
+    <div id="call-action-area" style="text-align: center; margin-top: 20px;">
+    <button id="start-call-btn" class="call-btn">📞 ज्योतिषी से बात करें</button>
+</div>
+
+<div id="call-overlay" class="hidden">
+    <div class="call-card" style="text-align: center; color: #d4af37; padding: 50px;">
+        <div class="avatar-glow">
+            <img src="https://cdn-icons-png.flaticon.com/512/3884/3884851.png" alt="Jyotishi" style="width:120px; border-radius:50%;">
+        </div>
+        <h2 id="call-status">कनेक्ट हो रहा है...</h2>
+        <p id="live-transcript" style="color: white;">सुन रहा हूँ...</p>
+        <button id="end-call-btn" class="end-btn" style="background: red; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-top: 20px; cursor: pointer;">✖ कॉल काटें</button>
+    </div>
+</div>
+
+<script>
+    // Elements को पहचानना
+    const startCallBtn = document.getElementById('start-call-btn');
+    const endCallBtn = document.getElementById('end-call-btn');
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const transcriptArea = document.getElementById('live-transcript');
+
+    // आवाज़ इंजन सेटअप
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        alert("आपका ब्राउज़र वॉइस कॉलिंग सपोर्ट नहीं करता। कृपया Chrome इस्तेमाल करें।");
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'hi-IN';
+        recognition.continuous = true;
+
+        // बटन दबाने पर क्या हो
+        startCallBtn.addEventListener('click', () => {
+            console.log("Call Started"); // चेक करने के लिए
+            callOverlay.classList.remove('hidden');
+            callStatus.innerText = "नमस्ते! मैं सुन रहा हूँ...";
+            
+            // शुरुआत में AI का स्वागत
+            speak("सप्रेम नमस्ते, जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। अपनी जन्म तिथि बताएं या अपना प्रश्न पूछें।");
+            
+            // बोलना शुरू करने के लिए थोड़ा इंतज़ार ताकि स्वागत संदेश खत्म हो
+            setTimeout(() => { recognition.start(); }, 2000);
+        });
+
+        // कॉल काटना
+        endCallBtn.addEventListener('click', () => {
+            recognition.stop();
+            window.speechSynthesis.cancel();
+            callOverlay.classList.add('hidden');
+        });
+
+        // जब आप बोलें तो क्या हो
+        recognition.onresult = async (event) => {
+            const userText = event.results[event.results.length - 1][0].transcript;
+            transcriptArea.innerText = "आप: " + userText;
+            
+            callStatus.innerText = "ज्योतिषी विचार कर रहे हैं...";
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userText })
+                });
+                const data = await response.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                
+                callStatus.innerText = "ज्योतिषी बोल रहे हैं...";
+                speak(aiText);
+            } catch (err) {
+                console.error("API Error:", err);
+                speak("माफ़ करें, नेटवर्क में कुछ बाधा है।");
+            }
+        };
+    }
+
+    // AI की आवाज़ निकालने वाला फंक्शन
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'hi-IN';
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
+    }
+</script>
 </body>
 </html>
