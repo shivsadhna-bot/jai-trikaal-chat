@@ -4,12 +4,16 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         const userPrompt = body.prompt || "नमस्ते";
 
-        // सबसे स्टेबल URL और मॉडल
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
+        // Free API के लिए सबसे स्टेबल URL फॉर्मेट यही है
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: userPrompt }] }]
+                contents: [{
+                    parts: [{ text: userPrompt }]
+                }]
             })
         });
 
