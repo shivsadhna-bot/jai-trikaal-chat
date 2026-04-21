@@ -4,16 +4,13 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         const userPrompt = body.prompt || "नमस्ते";
 
-        // यह URL सबसे लेटेस्ट है (v1) और 1.5-flash मॉडल के लिए स्टैंडर्ड है
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // आपके स्क्रीनशॉट के अनुसार लेटेस्ट मॉडल: gemini-2.5-pro-preview-tts
+        // Preview मॉडल्स के लिए v1beta सबसे सही रहता है
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-tts:generateContent?key=${apiKey}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: userPrompt }]
-                }]
+                contents: [{ parts: [{ text: userPrompt }] }]
             })
         });
 
@@ -21,7 +18,7 @@ export default async function handler(req, res) {
 
         if (data.error) {
             return res.status(200).json({ 
-                candidates: [{ content: { parts: [{ text: "API Error: " + data.error.message }] } }] 
+                candidates: [{ content: { parts: [{ text: "Google Error: " + data.error.message }] } }] 
             });
         }
 
