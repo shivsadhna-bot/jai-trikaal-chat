@@ -64,24 +64,29 @@
             chatBox.innerHTML += `<div class="msg ai-msg" id="${loadingId}">सोच रहा हूँ...</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            try {
+           try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' }, // यह लाइन बहुत जरूरी है
                     body: JSON.stringify({ prompt: currentAgentPrompt + " यूजर का सवाल: " + userText })
                 });
 
                 const data = await response.json();
                 const loadingElement = document.getElementById(loadingId);
                 
+                // अगर डेटा में कैंडिडेट्स हैं तो जवाब दिखाओ
                 if (data.candidates && data.candidates[0].content.parts[0].text) {
                     loadingElement.innerText = data.candidates[0].content.parts[0].text;
-                } else {
-                    loadingElement.innerText = "माफी चाहता हूँ, मैं अभी समझ नहीं पा रहा हूँ। कृपया फिर से प्रयास करें।";
+                } 
+                // अगर कोई एरर मैसेज आया है तो वो दिखाओ
+                else if (data.error) {
+                    loadingElement.innerText = "Error: " + (data.error.message || data.error);
+                }
+                else {
+                    loadingElement.innerText = "माफी चाहता हूँ, अभी तकनीकी समस्या है।";
                 }
             } catch (e) {
-                console.error(e);
-                document.getElementById(loadingId).innerText = "Error: सर्वर से संपर्क नहीं हो पाया।";
+                document.getElementById(loadingId).innerText = "Server Error: संपर्क नहीं हो पाया।";
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
