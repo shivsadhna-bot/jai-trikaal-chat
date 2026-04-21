@@ -10,9 +10,9 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: userPrompt }] }],
-                // यह हिस्सा 'Thinking' एबिलिटी को इनेबल करता है
                 generationConfig: {
-                    thinking_config: { include_thoughts: true }
+                    // इसे false कर दें ताकि 'My Approach' वाला हिस्सा न आए
+                    thinking_config: { include_thoughts: false } 
                 }
             })
         });
