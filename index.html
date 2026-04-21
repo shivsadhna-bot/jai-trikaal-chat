@@ -146,6 +146,55 @@
         
         <div class="call-controls">
             <button id="end-call-btn" class="end-btn">✖ कॉल काटें</button>
+            const startCallBtn = document.getElementById('start-call-btn');
+const endCallBtn = document.getElementById('end-call-btn');
+const callOverlay = document.getElementById('call-overlay');
+const callStatus = document.getElementById('call-status');
+
+// आवाज़ पहचानने का सिस्टम (Browser's Voice Engine)
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'hi-IN'; // हिंदी
+recognition.continuous = true;
+
+// कॉल शुरू करना
+startCallBtn.onclick = () => {
+    callOverlay.classList.remove('hidden');
+    recognition.start();
+    callStatus.innerText = "नमस्ते! मैं सुन रहा हूँ...";
+    speak("जय त्रिकाल! मैं आपका डिजिटल ज्योतिषी। अपनी समस्या बताएं।");
+};
+
+// जब आप बोलेंगे, तो क्या होगा
+recognition.onresult = async (event) => {
+    const text = event.results[event.results.length - 1][0].transcript;
+    document.getElementById('live-transcript').innerText = "आप: " + text;
+
+    // अब यहाँ Gemini API को कॉल करें (वही कोड जो आपने पहले चैट के लिए बनाया था)
+    const response = await fetch('/api/chat', {
+        method: 'POST',
+        body: JSON.stringify({ prompt: text })
+    });
+    const data = await response.json();
+    const reply = data.candidates[0].content.parts[0].text;
+
+    speak(reply);
+};
+
+// AI का बोलकर जवाब देना
+function speak(text) {
+    window.speechSynthesis.cancel(); // पुरानी आवाज़ बंद करें
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'hi-IN';
+    msg.rate = 0.9; 
+    window.speechSynthesis.speak(msg);
+}
+
+// कॉल काटना
+endCallBtn.onclick = () => {
+    window.speechSynthesis.cancel();
+    recognition.stop();
+    callOverlay.classList.add('hidden');
+};
         </div>
     </div>
 </div>
