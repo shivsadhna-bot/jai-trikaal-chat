@@ -91,5 +91,22 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
+    <div id="call-action-area" style="text-align: center; margin-top: 20px;">
+    <button id="start-call-btn" class="call-btn">📞 ज्योतिषी से बात करें</button>
+</div>
+
+<div id="call-overlay" class="hidden">
+    <div class="call-card">
+        <div class="avatar-glow">
+            <img src="astrologer-avatar.png" alt="Jyotishi" id="jyotishi-img">
+        </div>
+        <h2 id="call-status">कनेक्ट हो रहा है...</h2>
+        <p id="live-transcript">सुन रहा हूँ...</p>
+        
+        <div class="call-controls">
+            <button id="end-call-btn" class="end-btn">✖ कॉल काटें</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
