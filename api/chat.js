@@ -1,31 +1,27 @@
 export default async function handler(req, res) {
-    try {
-        const apiKey = process.env.GEMINI_API_KEY;
-        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        const userPrompt = body.prompt || "नमस्ते";
+    const apiKey = process.env.GEMINI_API_KEY;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
-        // 'gemini-1.5-flash' सबसे ज़्यादा कम्पैटिबल मॉडल है
+    try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: userPrompt }] }]
+                contents: [{ parts: [{ text: body.prompt || "नमस्ते" }] }]
             })
         });
 
         const data = await response.json();
-
+        
+        // अगर यहाँ भी एरर आता है, तो हम समझ जाएंगे कि Key में ही गड़बड़ है
         if (data.error) {
-            // अगर अब भी नहीं मिलता, तो हम सीधे 'gemini-pro' (बिना वर्शन नंबर के) ट्राई करेंगे
             return res.status(200).json({ 
-                candidates: [{ content: { parts: [{ text: "Google Error: " + data.error.message }] } }] 
+                candidates: [{ content: { parts: [{ text: "Final Error: " + data.error.message }] } }] 
             });
         }
 
         return res.status(200).json(data);
-    } catch (error) {
-        return res.status(200).json({ 
-            candidates: [{ content: { parts: [{ text: "System Error: " + error.message }] } }] 
-        });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 }
